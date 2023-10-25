@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:login_app/utils/colors/colors.dart';
 
@@ -6,6 +8,22 @@ class HomePage extends StatefulWidget {
 
   @override
   State<HomePage> createState() => _HomePageState();
+}
+
+String? myName;
+
+fetchData() async {
+  final firebaseUser = await FirebaseAuth.instance.currentUser;
+  if (firebaseUser != null) {
+    await FirebaseFirestore.instance
+        .collection("profiles")
+        .doc(firebaseUser.uid)
+        .get()
+        .then((ds) {
+      myName = ds.get("name");
+      print(myName);
+    });
+  } else {}
 }
 
 class _HomePageState extends State<HomePage> {
@@ -26,46 +44,37 @@ class _HomePageState extends State<HomePage> {
                 decoration: BoxDecoration(
                   color: mainColor,
                 ),
-                child: const ListTile(
-                  leading: CircleAvatar(
-                    backgroundImage: AssetImage("assets/images/profile.jpg"),
-                  ),
-                  title: Text(
-                    "Saif",
-                    style: TextStyle(fontSize: 20, color: Colors.white),
-                  ),
-                ),
+                child: FutureBuilder(
+                    future: fetchData(),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        print(snapshot.data);
+                        return ListTile(
+                          leading: const CircleAvatar(
+                            backgroundImage:
+                                AssetImage("assets/images/profile.jpg"),
+                          ),
+                          title: Text(
+                            myName.toString(),
+                            style: const TextStyle(
+                                fontSize: 20, color: Colors.white),
+                          ),
+                        );
+                      }
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    }),
               ),
               ListTile(
-                onTap: () {},
+                onTap: () {
+                  FirebaseAuth.instance.signOut();
+                  Navigator.of(context)
+                    ..pop()
+                    ..pop();
+                },
                 title: const Text("Signout"),
                 trailing: const Icon(Icons.logout),
-              ),
-            ],
-          ),
-        ),
-        body: const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.face_6,
-                size: 100,
-              ),
-              Text(
-                "Hey!",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 60),
-              ),
-              // SizedBox(
-              //   height: 10,
-              // ),
-              Text(
-                "Saif",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30),
-              ),
-              Text(
-                "Roll No:",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30),
               ),
             ],
           ),

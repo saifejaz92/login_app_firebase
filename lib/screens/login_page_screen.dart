@@ -1,4 +1,6 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:login_app/screens/homepage.dart';
 import 'package:login_app/utils/colors/colors.dart';
 
@@ -12,6 +14,39 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   String name = "";
   final _formKey = GlobalKey<FormState>();
+  bool isLogin = false;
+  TextEditingController emailController = TextEditingController();
+  TextEditingController passController = TextEditingController();
+
+  loginUser() async {
+    try {
+      setState(() {
+        isLogin = true;
+      });
+
+      final credential = await FirebaseAuth.instance
+          .signInWithEmailAndPassword(
+            email: emailController.text,
+            password: passController.text,
+          )
+          .then((value) => {
+                Fluttertoast.showToast(msg: "Login Succesfully!"),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const HomePage(),
+                  ),
+                ),
+              });
+    } catch (e) {
+      setState(() {
+        isLogin = false;
+      });
+
+      Fluttertoast.showToast(msg: "$e");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -51,6 +86,7 @@ class _LoginPageState extends State<LoginPage> {
               Padding(
                 padding: const EdgeInsets.only(left: 20, right: 20),
                 child: TextFormField(
+                  controller: emailController,
                   validator: (value) {
                     if (value!.isEmpty) {
                       return "Email field cant be empty";
@@ -82,6 +118,7 @@ class _LoginPageState extends State<LoginPage> {
               Padding(
                 padding: const EdgeInsets.only(left: 20, right: 20),
                 child: TextFormField(
+                  controller: passController,
                   validator: (value) {
                     if (value!.isEmpty) {
                       return "Password field cant be empty";
@@ -110,8 +147,12 @@ class _LoginPageState extends State<LoginPage> {
                   obscureText: true,
                 ),
               ),
-              const SizedBox(
+              SizedBox(
                 height: 50,
+                child: Visibility(
+                  visible: isLogin,
+                  child: const CircularProgressIndicator(),
+                ),
               ),
               SizedBox(
                 height: 70,
@@ -126,12 +167,7 @@ class _LoginPageState extends State<LoginPage> {
                       )),
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const HomePage(),
-                        ),
-                      );
+                      loginUser();
                     }
                   },
                   child: const Text(
