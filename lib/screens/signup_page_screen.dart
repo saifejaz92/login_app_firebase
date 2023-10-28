@@ -21,18 +21,16 @@ TextEditingController nameController = TextEditingController();
 TextEditingController ageController = TextEditingController();
 
 adduser() async {
-  var firebaseUser = await FirebaseAuth.instance.currentUser;
-  FirebaseFirestore.instance.collection("profiles").doc(firebaseUser!.uid).set({
+  User? firebaseUser = FirebaseAuth.instance.currentUser;
+  FirebaseFirestore.instance.collection("profiles").doc(firebaseUser?.uid).set({
     "name": nameController.text,
     "age": ageController.text,
-    "uid": firebaseUser.uid,
+    "uid": firebaseUser?.uid,
   }).then(
     (value) => Fluttertoast.showToast(msg: "Registered!").onError(
       (error, stackTrace) => Fluttertoast.showToast(msg: "$error"),
     ),
   );
-  var abc = FirebaseFirestore.instance.collection("profiles").doc("name").get();
-  print(abc);
 }
 
 void registerUser(BuildContext context) async {
